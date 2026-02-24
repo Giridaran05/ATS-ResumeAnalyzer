@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import "./App.css";
 
+const API_BASE = "https://ats-resumeanalyzer.onrender.com";
+
 function App() {
   const [file, setFile] = useState(null);
   const [role, setRole] = useState("");
@@ -45,7 +47,7 @@ function App() {
     try {
       setLoading(true);
 
-      const res = await fetch("http://localhost:5000/analyze", {
+      const res = await fetch(`${API_BASE}/analyze`, {
         method: "POST",
         body: formData,
       });
@@ -53,21 +55,19 @@ function App() {
       const data = await res.json();
       console.log("Backend Response:", data);
 
-      setTimeout(() => {
-        setResult(data);
-        setLoading(false);
-      }, 800);
+      setResult(data);
+      setLoading(false);
 
     } catch (err) {
       setLoading(false);
-      alert("Backend server not running");
+      alert("Backend server not responding (Render may be waking up)");
     }
   };
 
   const exportReport = async () => {
     if (!result) return;
 
-    const res = await fetch("http://localhost:5000/export", {
+    const res = await fetch(`${API_BASE}/export`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -136,7 +136,7 @@ function App() {
 
         {result && (
           <div className="result">
-            <h3>Match Score: {result.score}%</h3>
+            <h3>Match Score: {result.score || 0}%</h3>
 
             <div>
               <strong>✅ Matched Skills</strong>
@@ -154,9 +154,13 @@ function App() {
             <div>
               <strong>❌ Missing Skills</strong>
               <div className="skills missing">
-                {result?.missingSkills?.map((skill, i) => (
-                  <span key={i}>{skill}</span>
-                ))}
+                {result?.missingSkills?.length ? (
+                  result.missingSkills.map((skill, i) => (
+                    <span key={i}>{skill}</span>
+                  ))
+                ) : (
+                  <p>No missing skills</p>
+                )}
               </div>
             </div>
 
