@@ -47,8 +47,6 @@ async function extractText(filePath, mimeType) {
   }
 }
 
-/* ✅ FIXED SKILL DETECTION */
-
 function extractSkills(text) {
   return SKILLS_DB.filter(skill => {
     const pattern = new RegExp(`\\b${skill}\\b`, "i");
@@ -70,19 +68,13 @@ function calculateScore(found, required) {
 app.post("/analyze", upload.single("resume"), async (req, res) => {
   try {
     if (!req.file) {
-      return res.json({
-        score: 0,
-        matchedSkills: [],
-        missingSkills: [],
-      });
+      return res.json({ score: 0, matchedSkills: [], missingSkills: [] });
     }
 
     const role = (req.body.role || "").toLowerCase();
     const filePath = req.file.path;
 
     const text = await extractText(filePath, req.file.mimetype);
-
-    console.log("Extracted Text:", text);
 
     const foundSkills = extractSkills(text);
 
@@ -101,19 +93,15 @@ app.post("/analyze", upload.single("resume"), async (req, res) => {
     fs.unlinkSync(filePath);
 
     res.json({
-      score: score || 0,
-      matchedSkills: matched || [],
-      missingSkills: missing || [],
+      score,
+      matchedSkills: matched,
+      missingSkills: missing,
     });
 
   } catch (err) {
     console.log("Analyze Error:", err.message);
 
-    res.json({
-      score: 0,
-      matchedSkills: [],
-      missingSkills: [],
-    });
+    res.json({ score: 0, matchedSkills: [], missingSkills: [] });
   }
 });
 
@@ -152,6 +140,10 @@ app.post("/export", (req, res) => {
   }
 });
 
-app.listen(5000, () => {
-  console.log("Server running on http://localhost:5000");
+/* ✅ RENDER SAFE PORT */
+
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
