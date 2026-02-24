@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import "./App.css";
 
 function App() {
@@ -7,23 +7,11 @@ function App() {
   const [result, setResult] = useState(null);
   const [dragActive, setDragActive] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [history, setHistory] = useState([]);
 
   const allowedTypes = [
     "application/pdf",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   ];
-
-  /* ---------------- LOAD HISTORY ---------------- */
-
-  useEffect(() => {
-    fetch("http://localhost:5000/history")
-      .then(res => res.json())
-      .then(data => setHistory(data))
-      .catch(() => {});
-  }, [result]); // refresh after analysis
-
-  /* ---------------- FILE HANDLING ---------------- */
 
   const handleFile = (selectedFile) => {
     if (!selectedFile) return;
@@ -46,8 +34,6 @@ function App() {
     }
   };
 
-  /* ---------------- ANALYZE ---------------- */
-
   const analyzeResume = async () => {
     if (!file) return alert("Upload resume first");
     if (!role) return alert("Enter job role");
@@ -65,6 +51,7 @@ function App() {
       });
 
       const data = await res.json();
+      console.log("Backend Response:", data);
 
       setTimeout(() => {
         setResult(data);
@@ -76,8 +63,6 @@ function App() {
       alert("Backend server not running");
     }
   };
-
-  /* ---------------- EXPORT PDF ---------------- */
 
   const exportReport = async () => {
     if (!result) return;
@@ -97,8 +82,6 @@ function App() {
     const url = window.URL.createObjectURL(blob);
     window.open(url);
   };
-
-  /* ---------------- RESET ---------------- */
 
   const resetAll = () => {
     setFile(null);
@@ -158,7 +141,7 @@ function App() {
             <div>
               <strong>✅ Matched Skills</strong>
               <div className="skills">
-                {result.matchedSkills.length ? (
+                {result?.matchedSkills?.length ? (
                   result.matchedSkills.map((skill, i) => (
                     <span key={i}>{skill}</span>
                   ))
@@ -171,7 +154,7 @@ function App() {
             <div>
               <strong>❌ Missing Skills</strong>
               <div className="skills missing">
-                {result.missingSkills.map((skill, i) => (
+                {result?.missingSkills?.map((skill, i) => (
                   <span key={i}>{skill}</span>
                 ))}
               </div>
@@ -186,23 +169,6 @@ function App() {
             </button>
           </div>
         )}
-
-        {/* ---------------- HISTORY PANEL ---------------- */}
-
-        <div className="history">
-          <h3>📜 Upload History</h3>
-          {history.length ? (
-            history.map((item, i) => (
-              <div key={i} className="history-item">
-                <p><strong>{item.fileName}</strong></p>
-                <p>{item.role} — {item.score}%</p>
-              </div>
-            ))
-          ) : (
-            <p>No history yet</p>
-          )}
-        </div>
-
       </div>
     </div>
   );
